@@ -4,7 +4,7 @@ import os
 from docx import Document
 
 # Set page configuration
-st.set_page_config(page_title="HCV-GPT", layout="wide")
+st.set_page_config(page_title="HCV-GPT", layout="wide", initial_sidebar_state="expanded")
 
 OPENAI_API_KEY = 'INSERT YOUR OPENAI API KEY HERE'
 MODEL_NAME = "INSERT MODEL NAME HERE"
@@ -37,34 +37,44 @@ if "messages" not in st.session_state:
 st.markdown("""
 <style>
     .reportview-container {
-        background: #f0f2f6;
+        background: linear-gradient(to right, #eef2f3, #8e9eab);
+        padding: 2rem;
     }
     .main {
         background-color: #ffffff;
         padding: 2rem;
-        border-radius: 10px;
-        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        border-radius: 15px;
+        box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+        margin-top: -3rem;
+        display: flex;
+        flex-direction: column;
+        min-height: 100vh;
     }
     h1 {
-        color: #2c3e50;
-        font-family: 'Helvetica Neue', sans-serif;
+        color: #34495e;
+        font-family: 'Roboto', sans-serif;
         font-weight: 700;
         text-align: center;
         margin-bottom: 2rem;
+        text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
     }
     .stTextInput > div > div > input {
-        background-color: #f8f9fa;
+        background-color: #ffffff;
+        border-radius: 8px;
+        border: 1px solid #ccc;
+        padding: 10px;
     }
     .stButton > button {
-        background-color: #3498db;
+        background-color: #27ae60;
         color: #ffffff;
-        border-radius: 5px;
+        border-radius: 8px;
         border: none;
         padding: 0.5rem 1rem;
         font-weight: 600;
+        transition: background-color 0.3s ease;
     }
     .stButton > button:hover {
-        background-color: #2980b9;
+        background-color: #1e8449;
     }
     .chat-message {
         padding: 1rem;
@@ -72,14 +82,41 @@ st.markdown("""
         margin-bottom: 1rem;
         display: flex;
         flex-direction: column;
+        background-color: #f4f6f8;
     }
     .user-message {
-        background-color: #f8f9fa;
+        background-color: #d1ecf1;
         align-self: flex-end;
+        border-left: 5px solid #007bff;
     }
     .bot-message {
-        background-color: #e1f5fe;
+        background-color: #eafaf1;
         align-self: flex-start;
+        border-left: 5px solid #27ae60;
+    }
+    .stSidebar > div {
+        padding: 1rem;
+    }
+    .footer {
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        width: 100%;
+        background-color: #f8f9fa;
+        color: #34495e;
+        text-align: center;
+        padding: 1rem;
+        box-shadow: 0px -2px 4px rgba(0, 0, 0, 0.1);
+        z-index: 1000;
+    }
+    .main-content {
+        flex: 1;
+        overflow-y: auto;
+        padding-bottom: 100px; /* Space for the footer */
+    }
+    .footer-text {
+        margin: 0;
+        line-height: 1.5;
     }
 </style>
 """, unsafe_allow_html=True)
@@ -90,15 +127,15 @@ st.title("HCV-GPT: Your AI Expert Assistant on Hepatitis C Virus")
 # Sidebar for additional information or settings
 with st.sidebar:
     st.markdown("## About HCV-GPT")
-    st.info("HCV-GPT: Your AI-Powered Hepatitis C Specialist. Imagine having instant access to a cutting-edge AI assistant that's laser-focused on Hepatitis C virus (HCV) diagnosis and management. That's exactly what HCV-GPT delivers. This revolutionary tool harnesses the power of advanced language models and retrieval augmented generation to provide you with expert-level guidance, all based on the latest gold-standard recommendations according to the 2020 Guidelines published by the European Association of The Study of The Liver (DOI: 10.1016/j.jhep.2020.08.018).")
-    st.markdown("### How to use:")
-    st.markdown("1. Type your question in the chat input")
-    st.markdown("2. Press Enter or click 'Send'")
-    st.markdown("3. Be careful not to input any personal health information!")
-    st.markdown("### Disclaimer:")
-    st.markdown("If using this application in your research, reference to tobeadded")
+    st.info("**HCV-GPT**: Your AI-Powered Hepatitis C Specialist. Imagine having instant access to a cutting-edge AI assistant that's laser-focused on Hepatitis C virus (HCV) diagnosis and management. That's exactly what HCV-GPT delivers. This revolutionary tool harnesses the power of advanced language models and retrieval-augmented generation to provide you with expert-level guidance, all based on the latest gold-standard recommendations according to the 2020 Guidelines published by the European Association of The Study of The Liver (DOI: 10.1016/j.jhep.2020.08.018).")
+    st.markdown("### 🪪 Personal Health Information:")
+    st.markdown("Healthcare professionals and patients, please do not enter any personal health information (PHI) or patient data in this chat interface. Protect privacy and maintain confidentiality.")
+    st.sidebar.markdown("### ⚠️ Disclaimer:")
+    st.sidebar.markdown("This tool is intended for educational and research purposes only. If using this application in your research, please reference the following research article [to be added].")
+    st.sidebar.markdown("### 🚀 Developed by HAIM Lab @ Yale School of Medicine")
 
 # Main chat interface
+st.markdown("<div class='main-content'>", unsafe_allow_html=True)
 st.markdown("## Chat with HCV-GPT")
 
 # Display chat messages
@@ -131,6 +168,4 @@ if prompt := st.chat_input("Ask HCV-GPT a question..."):
         
     st.session_state.messages.append({"role": "assistant", "content": full_response})
 
-# Footer
-st.markdown("---")
-st.markdown("Developed by HAIM Lab @ Yale School of Medicine")
+st.markdown("</div>", unsafe_allow_html=True)

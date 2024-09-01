@@ -16,32 +16,33 @@ HCV-GPT is an advanced AI assistant specifically designed to provide expert-leve
 
 To set up the HCV-GPT project, follow these steps:
 
-1. Clone the repository:
+1. Download the HCV-RAG folder containing all the necessary files.
+
+2. Open a terminal or command prompt and navigate to the HCV-RAG folder:
    ```
-   git clone https://github.com/your-username/hcv-gpt.git
-   cd hcv-gpt
+   cd path/to/HCV-RAG
    ```
 
-2. Create a virtual environment (optional but recommended):
+3. Create a virtual environment (optional but recommended):
    ```
    python -m venv venv
    source venv/bin/activate  # On Windows, use `venv\Scripts\activate`
    ```
 
-3. Install the required dependencies:
+4. Install the required dependencies:
    ```
    pip install streamlit openai python-docx
    ```
 
-4. Set up your OpenAI API key:
-   - Create a `.env` file in the project root
+5. Set up your OpenAI API key:
+   - Create a `.env` file in the HCV-RAG folder
    - Add your OpenAI API key: `OPENAI_API_KEY=your_api_key_here`
 
 ## Usage
 
 To run the HCV-GPT application:
 
-1. Ensure you're in the project directory and your virtual environment is activated (if used).
+1. Ensure you're in the HCV-RAG folder and your virtual environment is activated (if used).
 
 2. Run the Streamlit app:
    ```
@@ -54,10 +55,11 @@ To run the HCV-GPT application:
 
 ## Project Structure
 
+The HCV-RAG folder should contain the following files:
+
 - `app.py`: Main application file containing the Streamlit web app and OpenAI integration
 - `file1.docx`: Word document containing prompt engineering instructions
 - `file2.docx`: Word document containing current HCV guidelines
-- `requirements.txt`: List of Python dependencies
 
 ## Customization
 
@@ -85,3 +87,5 @@ If you use this application in your research, please cite:
 ## Development
 
 Developed by HAIM Lab @ Yale School of Medicine
+
+For issues, feature requests, or questions, please contact the HAIM Lab at Yale School of Medicine.

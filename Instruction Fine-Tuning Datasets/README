@@ -1,0 +1,44 @@
+# OpenAI Fine-tuning Dataset Repository
+
+This repository contains JSONL files prepared for fine-tuning models on the OpenAI platform. These datasets are focused on medical guidelines from AASLD (American Association for the Study of Liver Diseases) and EASL (European Association for the Study of the Liver).
+
+## Files
+
+1. `AASLD_GUIDELINES_FIRST_VALIDATION.jsonl`
+   - First validation dataset based on AASLD guidelines
+   - Suitable for initial validation
+
+2. `AASLD_GUIDELINES_SECOND_VALIDATION.jsonl`
+   - Second validation dataset based on AASLD guidelines
+   - Can be used for second validation 
+
+3. `EASL_GUIDELINES_FIRST_TRAINING.jsonl`
+   - First training dataset based on EASL guidelines
+   - Primary dataset for initial model training
+
+4. `EASL_GUIDELINES_SECOND_TRAINING.jsonl`
+   - Second training dataset based on EASL guidelines
+   - Can be used for second training 
+
+## Usage
+
+These files are designed to be uploaded directly to the OpenAI fine-tuning platform. To use them:
+
+1. Log in to your OpenAI account
+2. Navigate to the fine-tuning section
+3. Upload the desired JSONL file(s)
+4. Follow OpenAI's instructions for initiating the fine-tuning process
+
+## Data Format
+
+All files are in JSONL (JSON Lines) format, as required by OpenAI's fine-tuning process. Each line in these files represents a single training example.
+
+## Important Notes
+
+- Ensure that you have the necessary permissions and rights to use these guidelines for AI model training.
+- Review the content of each file before uploading to ensure it meets your specific training needs.
+- Follow OpenAI's best practices for fine-tuning to achieve optimal results.
+
+## Support
+
+For questions about the datasets, please open an issue in this repository. For questions about the fine-tuning process, refer to OpenAI's documentation or support channels.

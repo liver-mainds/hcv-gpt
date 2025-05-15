@@ -1,91 +1,31 @@
-# HCV-GPT: AI-Powered Hepatitis C Specialist
+Overview
+HCV-GPT is an advanced AI assistant specifically designed to provide expert-level guidance on Hepatitis C virus (HCV) diagnosis and management. This tool leverages the power of OpenAI's GPT-4 Turbo model combined with retrieval augmented generation to offer insights based on the latest gold-standard recommendations from the 2020 Guidelines published by the European Association for the Study of the Liver.
+Features
 
-## Overview
+Interactive chat interface with real-time streaming response generation
+Evidence-based responses anchored to the latest EASL HCV guidelines
+User-friendly Streamlit web application with modern UI
+Efficient vector similarity search using FAISS
+Pre-computed embeddings for optimal performance
+Diagnostic and treatment assistance for healthcare professionals
 
-HCV-GPT is an advanced AI assistant specifically designed to provide expert-level guidance on Hepatitis C virus (HCV) diagnosis and management. This tool leverages the power of OpenAI's GPT models and retrieval augmented generation to offer insights based on the latest gold-standard recommendations from the 2020 Guidelines published by the European Association of The Study of The Liver.
+Repository Structure
+The repository contains the following key components:
+app.py: Main Streamlit application file with the chat interface and RAG implementation
+file1.docx: Word document containing prompt engineering instructions
+vector_data/: Folder containing pre-computed FAISS index and serialized chunks
+hcv_faiss_index.bin: Binary FAISS index file for fast vector similarity search
+hcv_chunks.pkl: Pickled file containing the paragraph chunks from the HCV guidelines
 
-## Features
+Installation & Quick Start
+1. Clone the Repository
 
-- Interactive chat interface for asking questions about HCV
-- Responses based on the latest HCV guidelines
-- User-friendly Streamlit web application
-- Customized AI responses using OpenAI's GPT-4 model
-- Integration with external Word documents for prompt engineering and guidelines
+2. Install the required dependencies:
+pip install streamlit openai python-docx numpy faiss-cpu
 
-## Installation
+3. Set your OpenAI API key as an environment variable:
+export OPENAI_API_KEY=your_api_key_here
 
-To set up the HCV-GPT project, follow these steps:
+4. Run the application:
+streamlit run app.py
 
-1. Download the HCV-RAG folder containing all the necessary files.
-
-2. Open a terminal or command prompt and navigate to the HCV-RAG folder:
-   ```
-   cd path/to/HCV-RAG
-   ```
-
-3. Create a virtual environment (optional but recommended):
-   ```
-   python -m venv venv
-   source venv/bin/activate  # On Windows, use `venv\Scripts\activate`
-   ```
-
-4. Install the required dependencies:
-   ```
-   pip install streamlit openai python-docx
-   ```
-
-5. Set up your OpenAI API key:
-   - Create a `.env` file in the HCV-RAG folder
-   - Add your OpenAI API key: `OPENAI_API_KEY=your_api_key_here`
-
-## Usage
-
-To run the HCV-GPT application:
-
-1. Ensure you're in the HCV-RAG folder and your virtual environment is activated (if used).
-
-2. Run the Streamlit app:
-   ```
-   streamlit run app.py
-   ```
-
-3. Open your web browser and navigate to the URL provided by Streamlit (usually `http://localhost:8501`).
-
-4. Use the chat interface to ask questions about Hepatitis C virus. The AI will respond based on the latest guidelines and prompt engineering instructions.
-
-## Project Structure
-
-The HCV-RAG folder should contain the following files:
-
-- `app.py`: Main application file containing the Streamlit web app and OpenAI integration
-- `file1.docx`: Word document containing prompt engineering instructions
-- `file2.docx`: Word document containing current HCV guidelines
-
-## Customization
-
-To customize the application:
-
-1. Modify the `file1.docx` to update prompt engineering instructions.
-2. Update `file2.docx` with the latest HCV guidelines when available.
-3. Adjust the `MODEL_NAME` variable in `app.py` to use a different OpenAI model if needed.
-
-## Dependencies
-
-- streamlit
-- openai
-- python-docx
-
-## Disclaimer
-
-This application is intended for research and educational purposes only. It should not be used as a substitute for professional medical advice, diagnosis, or treatment. Always consult with a qualified healthcare provider for medical guidance.
-
-## Citation
-
-If you use this application in your research, please cite:
-[Citation to be added]
-
-## Development
-
-Developed by HAIM Lab @ Yale School of Medicine
-
-For issues, feature requests, or questions, please contact the HAIM Lab at Yale School of Medicine.

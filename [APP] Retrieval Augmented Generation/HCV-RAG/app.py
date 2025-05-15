@@ -1,171 +1,272 @@
 import streamlit as st
-import openai
+from openai import OpenAI
 import os
+import numpy as np
+import faiss
+import pickle
 from docx import Document
 
-# Set page configuration
-st.set_page_config(page_title="HCV-GPT", layout="wide", initial_sidebar_state="expanded")
+# --- CONFIGURAZIONE STREAMLIT ---
+st.set_page_config(
+    page_title="HCV-GPT",
+    layout="wide",
+    page_icon="🦠",
+    initial_sidebar_state="expanded"
+)
 
-OPENAI_API_KEY = 'INSERT YOUR OPENAI API KEY HERE'
+# --- CHIAVI E MODELLI ---
+OPENAI_API_KEY = os.getenv(
+    "OPENAI_API_KEY",
+    "INSERT YOUR OPENAI API KEY HERE"
+)
 MODEL_NAME = "INSERT MODEL NAME HERE"
-client = openai.OpenAI(api_key=OPENAI_API_KEY)
+EMBEDDING_MODEL = "text-embedding-3-large"
+client = OpenAI(api_key=OPENAI_API_KEY)
 
-# Function to read content from a Word document
+# --- FUNZIONI UTILI ---
 def read_docx_content(filename):
     doc = Document(filename)
-    full_text = []
-    for para in doc.paragraphs:
-        full_text.append(para.text)
-    return '\n'.join(full_text)
+    return "\n".join(p.text for p in doc.paragraphs)
 
-# Read content from external Word documents
-current_dir = os.path.dirname(os.path.abspath(__file__))
-file1_path = os.path.join(current_dir, 'file1.docx')
-file2_path = os.path.join(current_dir, 'file2.docx')
+@st.cache_resource
+def load_vector_dataset():
+    base = os.path.dirname(os.path.abspath(__file__))
+    vector_dir = os.path.join(base, "vector_data")
+    index = faiss.read_index(os.path.join(vector_dir, "hcv_faiss_index.bin"))
+    with open(os.path.join(vector_dir, "hcv_chunks.pkl"), "rb") as f:
+        chunks = pickle.load(f)
+    return index, chunks
 
-file1_content = read_docx_content(file1_path)
-file2_content = read_docx_content(file2_path)
+def load_instructions():
+    base = os.path.dirname(os.path.abspath(__file__))
+    content = read_docx_content(os.path.join(base, "file1.docx"))
+    return f"In order to respond to each question, follow these instructions:\n\n{content}"
 
-# Prepare the prompt engineering instructions
-default_prompt = f"""In order to respond to each question, follow these instructions: {file1_content} and bind your response to the current HCV guidelines contained in: {file2_content}"""
+def retrieve_best_chunk(query, index, chunks):
+    resp = client.embeddings.create(input=query, model=EMBEDDING_MODEL)
+    emb = np.array(resp.data[0].embedding, dtype="float32").reshape(1, -1)
+    _, I = index.search(emb, 1)
+    return chunks[I[0][0]]
 
-# Initialize session state for messages if it doesn't exist
-if "messages" not in st.session_state:
-    st.session_state.messages = [{"role": "system", "content": default_prompt}]
-
-# Custom CSS
+# --- CSS PERSONALIZZATO ---
 st.markdown("""
 <style>
-    .reportview-container {
-        background: linear-gradient(to right, #eef2f3, #8e9eab);
-        padding: 2rem;
-    }
-    .main {
-        background-color: #ffffff;
-        padding: 2rem;
-        border-radius: 15px;
-        box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
-        margin-top: -3rem;
-        display: flex;
-        flex-direction: column;
-        min-height: 100vh;
-    }
-    h1 {
-        color: #34495e;
-        font-family: 'Roboto', sans-serif;
-        font-weight: 700;
-        text-align: center;
-        margin-bottom: 2rem;
-        text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
-    }
-    .stTextInput > div > div > input {
-        background-color: #ffffff;
-        border-radius: 8px;
-        border: 1px solid #ccc;
-        padding: 10px;
-    }
-    .stButton > button {
-        background-color: #27ae60;
-        color: #ffffff;
-        border-radius: 8px;
-        border: none;
-        padding: 0.5rem 1rem;
-        font-weight: 600;
-        transition: background-color 0.3s ease;
-    }
-    .stButton > button:hover {
-        background-color: #1e8449;
-    }
-    .chat-message {
-        padding: 1rem;
-        border-radius: 10px;
-        margin-bottom: 1rem;
-        display: flex;
-        flex-direction: column;
-        background-color: #f4f6f8;
-    }
-    .user-message {
-        background-color: #d1ecf1;
-        align-self: flex-end;
-        border-left: 5px solid #007bff;
-    }
-    .bot-message {
-        background-color: #eafaf1;
-        align-self: flex-start;
-        border-left: 5px solid #27ae60;
-    }
-    .stSidebar > div {
-        padding: 1rem;
-    }
-    .footer {
-        position: fixed;
-        bottom: 0;
-        left: 0;
-        width: 100%;
-        background-color: #f8f9fa;
-        color: #34495e;
-        text-align: center;
-        padding: 1rem;
-        box-shadow: 0px -2px 4px rgba(0, 0, 0, 0.1);
-        z-index: 1000;
-    }
-    .main-content {
-        flex: 1;
-        overflow-y: auto;
-        padding-bottom: 100px; /* Space for the footer */
-    }
-    .footer-text {
-        margin: 0;
-        line-height: 1.5;
-    }
+  [data-testid="stAppViewContainer"] { padding: 0 !important; }
+  .main { margin:1rem auto; max-width:900px; padding:2rem; }
+
+  /* Header gradient shimmer behind text only */
+  h1.subtle-header {
+    font-size:2.5rem;
+    font-weight:bold;
+    text-align:center;
+    background: linear-gradient(90deg, #1a73e8, #34A853, #1a73e8);
+    background-size:200% 100%;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    animation: shimmer 3s infinite;
+  }
+  @keyframes shimmer {
+    0% { background-position: 0% 50%; }
+    100% { background-position: 100% 50%; }
+  }
+
+  /* Chat header centered and dark grey */
+  .chat-header {
+    font-size:1.3rem;
+    font-weight:600;
+    margin-bottom:1rem;
+    text-align:center;
+    color:#333333;
+  }
+
+  /* Chat styling */
+  [data-testid="stChatMessageContent"] { padding:0.5rem !important; }
+  .st-chat-message [data-testid="stVerticalBlock"] {
+    padding:0.75rem !important;
+    margin-bottom:1rem !important;
+    overflow-wrap:break-word !important;
+    box-shadow:0 2px 10px rgba(0,0,0,0.05) !important;
+  }
+  .st-chat-message.user [data-testid="stVerticalBlock"] {
+    background:#f0f5ff !important;
+    border-radius:20px 20px 20px 4px !important;
+    border-left:4px solid #1a73e8 !important;
+  }
+  .st-chat-message.assistant [data-testid="stVerticalBlock"] {
+    background:#f0fff4 !important;
+    border-radius:20px 20px 4px 20px !important;
+    border-left:4px solid #34A853 !important;
+  }
+  [data-testid="stChatInput"] {
+    background:white !important;
+    border:1px solid #e0e0e0 !important;
+    border-radius:10px !important;
+    padding:0.5rem !important;
+    box-shadow:0 2px 5px rgba(0,0,0,0.05) !important;
+  }
+  [data-testid="stChatInput"] > div { border:none !important; }
+
+  /* Sidebar styling */
+  [data-testid="stSidebar"] { background:#fff; border-right:1px solid rgba(0,0,0,0.1); }
+  .system-status {
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    background:#f8f9fa;
+    padding:0.75rem;
+    border-radius:8px;
+    margin-bottom:1rem;
+    border:1px solid rgba(0,0,0,0.05);
+  }
+  .feature-header {
+    text-align:center;
+    font-weight:bold;
+    margin:1rem 0 0.5rem;
+    color:#555;
+  }
+  .feature-card {
+    display:flex;
+    align-items:center;
+    background:#fff;
+    border:1px solid rgba(0,0,0,0.1);
+    border-radius:8px;
+    padding:0.8rem;
+    margin-bottom:0.8rem;
+    transition:transform 0.2s, box-shadow 0.2s;
+  }
+  .feature-card:hover {
+    transform:translateY(-2px);
+    box-shadow:0 4px 15px rgba(0,0,0,0.1);
+  }
+  .feature-card .emoji {
+    margin-right:0.6rem;
+    font-size:1.2rem;
+  }
+  .disclaimer {
+    display:flex;
+    align-items:center;
+    background:#ffebee;
+    color:#c62828;
+    padding:0.75rem;
+    border-left:4px solid #c62828;
+    border-radius:8px;
+    margin-top:1.2rem;
+    margin-bottom:1.2rem;
+  }
 </style>
 """, unsafe_allow_html=True)
 
-# App title
-st.title("HCV-GPT: Your AI Expert Assistant on Hepatitis C Virus")
+# --- LOAD DATA ---
+with st.spinner("Initializing HCV-GPT…"):
+    index, chunks = load_vector_dataset()
+    default_prompt = load_instructions()
+    if "messages" not in st.session_state:
+        st.session_state.messages = [{"role":"system","content":default_prompt}]
 
-# Sidebar for additional information or settings
+# --- SIDEBAR ---
 with st.sidebar:
-    st.markdown("## About HCV-GPT")
-    st.info("**HCV-GPT**: Your AI-Powered Hepatitis C Specialist. Imagine having instant access to a cutting-edge AI assistant that's laser-focused on Hepatitis C virus (HCV) diagnosis and management. That's exactly what HCV-GPT delivers. This revolutionary tool harnesses the power of advanced language models and retrieval-augmented generation to provide you with expert-level guidance, all based on the latest gold-standard recommendations according to the 2020 Guidelines published by the European Association of The Study of The Liver (DOI: 10.1016/j.jhep.2020.08.018).")
-    st.markdown("### 🪪 Personal Health Information:")
-    st.markdown("Healthcare professionals and patients, please do not enter any personal health information (PHI) or patient data in this chat interface. Protect privacy and maintain confidentiality.")
-    st.sidebar.markdown("### ⚠️ Disclaimer:")
-    st.sidebar.markdown("This tool is intended for educational and research purposes only. If using this application in your research, please reference the following research article [to be added].")
-    st.sidebar.markdown("### 🚀 Developed by HAIM Lab @ Yale School of Medicine")
+    # Banner HCV-GPT
+    st.markdown("""
+      <div style="text-align:center; margin-bottom:1rem;">
+        <span style="
+          font-size:2.2rem; font-weight:bold;
+          background:linear-gradient(to right,#1a73e8,#34A853);
+          -webkit-background-clip:text;
+          -webkit-text-fill-color:transparent;
+        ">HCV-GPT</span>
+        <span style="
+          background:rgba(52,168,83,0.1); color:#34A853;
+          padding:0.2rem 0.6rem; border-radius:8px;
+          font-size:0.8rem; vertical-align:middle; margin-left:0.3rem;
+        ">RAG</span>
+      </div>
+    """, unsafe_allow_html=True)
 
-# Main chat interface
-st.markdown("<div class='main-content'>", unsafe_allow_html=True)
-st.markdown("## Chat with HCV-GPT")
+    # System Online
+    st.markdown("""
+      <div class="system-status">
+        <div style="
+          height:10px; width:10px; background:#34A853;
+          border-radius:50%; margin-right:8px;
+          animation:pulse 2s infinite;
+        "></div>
+        <span style="font-weight:600; color:#333;">System Online</span>
+      </div>
+    """, unsafe_allow_html=True)
 
-# Display chat messages
-for message in st.session_state.messages[1:]:  # Skip the system message
-    with st.chat_message(message["role"], avatar="🤖" if message["role"] == "assistant" else "🧑🏻‍⚕️"):
-        st.markdown(f"<div class='chat-message {'user-message' if message['role'] == 'user' else 'bot-message'}'>{message['content']}</div>", unsafe_allow_html=True)
+    # Info EASL
+    st.markdown("""
+      Hepatitis C Virus AI-Expert according to the 2020 medical guidelines by EASL:  
+      <a href="https://doi.org/10.1016/j.jhep.2020.08.018">10.1016/j.jhep.2020.08.018</a>
+    """, unsafe_allow_html=True)
 
-# Chat input
-if prompt := st.chat_input("Ask HCV-GPT a question..."):
-    st.session_state.messages.append({"role": "user", "content": prompt})
-    with st.chat_message("user", avatar="🧑🏻‍⚕️"):
-        st.markdown(f"<div class='chat-message user-message'>{prompt}</div>", unsafe_allow_html=True)
-    
-    with st.chat_message("assistant", avatar="🤖"):
-        message_placeholder = st.empty()
-        full_response = ""
-        for response in client.chat.completions.create(
-            model=MODEL_NAME,
-            messages=[
-                {"role": m["role"], "content": m["content"]}
-                for m in st.session_state.messages
-            ],
-            stream=True,
-            max_tokens=1000,
-            temperature=0.8,
-            top_p=0.0
-        ):
-            full_response += (response.choices[0].delta.content or "")
-            message_placeholder.markdown(f"<div class='chat-message bot-message'>{full_response}</div>", unsafe_allow_html=True)
-        
-    st.session_state.messages.append({"role": "assistant", "content": full_response})
+    # Key Features
+    st.markdown('<div class="feature-header">Key Features</div>', unsafe_allow_html=True)
+    st.markdown("""
+      <div class="feature-card"><span class="emoji">📖</span><strong>Evidence-Based Responses</strong></div>
+      <div class="feature-card"><span class="emoji">🆕</span><strong>Latest Guidelines</strong></div>
+      <div class="feature-card"><span class="emoji">🩺</span><strong>Diagnostic Assistance</strong></div>
+      <div class="feature-card"><span class="emoji">💊</span><strong>Treatment Help</strong></div>
+    """, unsafe_allow_html=True)
 
-st.markdown("</div>", unsafe_allow_html=True)
+    # Disclaimer
+    st.markdown("""
+      <div class="disclaimer">
+        <span style="font-size:1.2rem; margin-right:0.5rem;">⚠️</span>
+        <span>This tool assists professionals and should not replace clinical judgment.</span>
+      </div>
+    """, unsafe_allow_html=True)
+
+    # Developed by card
+    st.markdown("""
+      <div class="feature-card">
+        <span class="emoji">🚀</span>
+        <strong>Developed by <a href="https://www.humanplusaimed.com/" target="_blank">HAIM LAB</a> @ Yale School of Medicine</strong>
+      </div>
+    """, unsafe_allow_html=True)
+
+# --- MAIN CONTENT ---
+st.markdown('<div class="main">', unsafe_allow_html=True)
+
+# Header chat
+st.markdown('<h1 class="subtle-header">HCV-GPT Assistant</h1>', unsafe_allow_html=True)
+st.markdown('<div class="chat-header">Chat with HCV-GPT</div>', unsafe_allow_html=True)
+
+# Chat history
+st.markdown('<div class="chat-messages">', unsafe_allow_html=True)
+for msg in st.session_state.messages[1:]:
+    with st.chat_message(msg["role"], avatar="🤖" if msg["role"]=="assistant" else "👨‍⚕️"):
+        st.write(msg["content"])
+st.markdown('</div>', unsafe_allow_html=True)
+
+# Input
+user_query = st.chat_input("Type your message…")
+
+# Process input
+if user_query:
+    st.session_state.messages.append({"role":"user","content":user_query})
+    with st.chat_message("user", avatar="👨‍⚕️"):
+        st.write(user_query)
+    with st.spinner("Generating response…"):
+        chunk = retrieve_best_chunk(user_query, index, chunks)
+        prompt = default_prompt + "\n\nCurrent Guidelines: " + chunk + "\n\nUser Query: " + user_query
+        with st.chat_message("assistant", avatar="🤖"):
+            full_response = ""
+            stream = client.chat.completions.create(
+                model=MODEL_NAME,
+                messages=[{"role":"system","content":prompt},{"role":"user","content":user_query}],
+                stream=True,
+                max_tokens=1000,
+                temperature=0.8,
+                top_p=0.5
+            )
+            placeholder = st.empty()
+            for c in stream:
+                if c.choices[0].delta.content:
+                    full_response += c.choices[0].delta.content
+                    placeholder.markdown(full_response)
+        st.session_state.messages.append({"role":"assistant","content":full_response})
+        st.rerun()
+
+st.markdown('</div>', unsafe_allow_html=True)  # Close main
+

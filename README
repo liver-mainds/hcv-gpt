@@ -1,17 +1,23 @@
-HCV-GPT
-Overview
-HCV-GPT is an advanced AI assistant specifically designed to provide expert-level guidance on Hepatitis C virus (HCV) diagnosis and management. This tool leverages the power of OpenAI's GPT-4 Turbo model combined with retrieval augmented generation to offer insights based on the latest gold-standard recommendations from the 2020 Guidelines published by the European Association for the Study of the Liver.
-Features
+## 🔒 Access Request
 
-Interactive chat interface with real-time streaming response generation
-Evidence-based responses anchored to the latest EASL HCV guidelines
-User-friendly Streamlit web application with modern UI
-Efficient vector similarity search using FAISS
-Pre-computed embeddings for optimal performance
-Diagnostic and treatment assistance for healthcare professionals
+**This repository contains the complete HCV-GPT implementation and datasets based on the article "From Guidelines to Real-Time Conversation: 
+Expert-Validated Retrieval-Augmented and Fine-Tuned GPT-4 for Hepatitis C Management" (DOI:  https://doi.org/10.1111/liv.70349).
 
-Repository Structure
-Our GitHub repository (https://github.com/liveraidlab/hcv-gpt) contains:
+### How to Request Access
 
-[APP] Retrieval Augmented Generation: Contains the Streamlit application (app.py), prompt instructions (file1.docx), and vector database (vector_data folder) for the RAG implementation
-Instruction Fine-Tuning Datasets: Contains all datasets used for supervised fine-tuning of the models, including training and validation sets derived from HCV guidelines
+📧 **Email**: [mauro.giuffre@yale.edu]
+
+**Subject**: `HCV-GPT Repository Access Request`
+
+**Please include in your email**:
+- Your name and affiliation
+- Brief description of your intended use
+- Professional background (medical/research)
+
+### What You'll Receive
+- Access to the complete private repository
+- Full source code and datasets
+- Setup and installation instructions
+- Technical documentation
+
+**Review time**: Usually 7 business days
